@@ -29,7 +29,24 @@ class SwordUse {
     }
 }
 
-const players = {};
+const players = {
+    // 1: {
+    //     x: 150,
+    //     y: 100,
+    //     state: 0,
+    //     right: 0,
+    //     use: null,
+    //     hp: 10,
+    // },
+    // 2: {
+    //     x: 100,
+    //     y: 100,
+    //     state: 0,
+    //     right: 0,
+    //     use: null,
+    //     hp: 10,
+    // },
+};
 const shells = {};
 const objects = {};
 const items = {};
@@ -218,6 +235,7 @@ function addEventListeners() {
             player.use = new SwordUse(+player.right);
         } else if (cmd == "hp") {
             player.hp = parseInt(msg[3]);
+            if (!player.hp) delete players[msg[1]];
         }
         console.log(event.data);
         // render();
