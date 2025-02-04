@@ -9,7 +9,7 @@ const ctx = canvas.getContext("2d");
 ctx.imageSmoothingEnabled = false;
 ctx.scale(4, 4);
 
-const socket = new WebSocket("ws://" + document.location.host);
+const socket = new WebSocket("ws://" + document.location.host + "/guest");
 let frame = 0;
 //!  constants end
 
@@ -18,8 +18,10 @@ class Player {
     y = null;
     state = 0;
     right = 0;
-    use = null;
-    hp = 10;
+    hp = 100;
+    use = 0;
+    emerge = 0;
+    death = 0;
 }
 
 class SwordUse {
@@ -42,8 +44,10 @@ const movement = {
 };
 
 const textures = {
-    player_staying: [[], []],
-    player_running: [[], []],
+    death: [[], []],
+    emerge: [[], []],
+    stand: [[], []],
+    run: [[], []],
     sword: [[], []],
 };
 
@@ -51,24 +55,38 @@ function loadTextures() {
     let img;
     for (let i = 1; i < 7; i++) {
         img = new Image();
-        img.src = "/static/img/Dacer/Dacer_Standing_Left" + i + ".png";
-        textures.player_staying[0].push(img);
+        img.src = "/static/img/Dacer/standing/left/" + i + ".png";
+        textures.stand[0].push(img);
         img = new Image();
-        img.src = "/static/img/Dacer/Dacer_Standing_Right" + i + ".png";
-        textures.player_staying[1].push(img);
+        img.src = "/static/img/Dacer/standing/right/" + i + ".png";
+        textures.stand[1].push(img);
         img = new Image();
-        img.src = "/static/img/Dacer/Dacer_Runing_Left" + i + ".png";
-        textures.player_running[0].push(img);
+        img.src = "/static/img/Dacer/running/left/" + i + ".png";
+        textures.run[0].push(img);
         img = new Image();
-        img.src = "/static/img/Dacer/Dacer_Runing_Right" + i + ".png";
-        textures.player_running[1].push(img);
+        img.src = "/static/img/Dacer/running/right/" + i + ".png";
+        textures.run[1].push(img);
         img = new Image();
         img.src = "/static/img/weapoons/blade_Left_OF" + i + ".png";
         textures.sword[0].push(img);
         img = new Image();
         img.src = "/static/img/weapoons/blade_RIght_OF" + i + ".png";
         textures.sword[1].push(img);
-        // enemy.textures.push(img)
+    }
+
+    for (let i = 1; i < 17; i++) {
+        img = new Image();
+        img.src = "/static/img/Dacer/death/left/" + i + ".png"
+        textures.death[0].push(img)
+        img = new Image();
+        img.src = "/static/img/Dacer/death/right/" + i + ".png"
+        textures.death[1].push(img)
+        img = new Image();
+        img.src = "/static/img/Dacer/death/left/" + i + ".png"
+        textures.emerge[0].push(img)
+        img = new Image();
+        img.src = "/static/img/Dacer/death/right/" + i + ".png"
+        textures.emerge[1].push(img)
     }
 
     // for (let i = 1; i < 7; i++) {}
@@ -87,9 +105,19 @@ function render() {
     let player;
     for (const id of Object.keys(players)) {
         player = players[id];
-        if (player.state)
+        if (player.emerge) {
             ctx.drawImage(
-                textures.player_running[+player.right][frame % 6],
+                textures.emerge[+player.right][player.emerge],
+                player.x - 16,
+                player.y - 16,
+                32,
+                32
+            );
+            player.emerge--;
+        }
+        else if (player.state)
+            ctx.drawImage(
+                textures.run[+player.right][frame % 6],
                 player.x - 16,
                 player.y - 16,
                 32,
@@ -97,7 +125,7 @@ function render() {
             );
         else
             ctx.drawImage(
-                textures.player_staying[+player.right][frame % 6],
+                textures.stand[+player.right][frame % 6],
                 player.x - 16,
                 player.y - 16,
                 32,
@@ -190,7 +218,8 @@ function addEventListeners() {
                 movement.right = true;
                 send_vector();
                 break;
-        }
+
+                        }
         // send_vector();
     });
 
@@ -218,8 +247,13 @@ function addEventListeners() {
             player.use = new SwordUse(+player.right);
         } else if (cmd == "hp") {
             player.hp = parseInt(msg[3]);
-            if (!player.hp)
+            if (!+player.hp)
                 delete players[msg[1]]
+        } else if (cmd == "emerge") {
+            [x, y] = msg[3].split(",");
+            player.x = x;
+            player.y = y;
+            player.emerge = 15;
         }
         console.log(event.data);
         // render();
@@ -227,7 +261,7 @@ function addEventListeners() {
 }
 
 function addIntervals() {
-    setInterval(() => render(), 32);
+    setInterval(() => render(), 41);
     setInterval(() => {
         if (frame == 5) {
             frame = 0;

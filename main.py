@@ -7,7 +7,7 @@ from starlette.routing import Route, Mount, WebSocketRoute
 from starlette.staticfiles import StaticFiles
 from starlette.endpoints import WebSocketEndpoint
 
-from server import Server
+from server import Process, game
 
 
 async def index(request):
@@ -16,7 +16,7 @@ async def index(request):
 
 @asynccontextmanager
 async def lifespan(app):
-    task = create_task(Server.loop())
+    task = create_task(game.loop())
     yield
 
 
@@ -25,7 +25,7 @@ app = Starlette(
     routes=(
         Route('/', index),
         Mount('/static', app=StaticFiles(directory="static")),
-        WebSocketRoute('/', Server)
+        WebSocketRoute("/{username:str}", Process)
     ),
     lifespan=lifespan
 )

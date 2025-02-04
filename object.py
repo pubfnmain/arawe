@@ -1,3 +1,6 @@
+from starlette.websockets import WebSocket
+
+
 class Object:
     x: float
     y: float
@@ -17,30 +20,30 @@ class Shell(Object):
 
 
 class Player(Shell):
-    id = 0
+    name: str
+    websocket: WebSocket | None
     hp = 100
     use = 0
     dir = -1
 
-    @classmethod
-    def get_id(cls):
-        cls.id += 1
-        return cls.id
-
     def __str__(self):
-        return 'p:' + str(self.id)
+        return 'p:' + self.name
 
-    def __init__(self, x, y):
-        self.id = self.get_id()
-        self.x = 64
-        self.y = 64
+    def __init__(self, websocket: WebSocket, x, y):
+        self.websocket = websocket
+        self.name = websocket.path_params["username"]
+        self.x = x
+        self.y = y
 
-    def reload(self):
+    def update(self):
         if self.use:
             self.use -= 1
 
     def get_pos(self):
         return f"{self}:pos:{self.x},{self.y}"
+
+    def emerge(self):
+        return f"{self}:emerge:{self.x},{self.y}"
 
     def get_hp(self):
         return f"{self}:hp:{self.hp}"
