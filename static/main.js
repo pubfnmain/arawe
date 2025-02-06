@@ -16,7 +16,7 @@ let frame = 0;
 class Player {
     x = null;
     y = null;
-    state = 0;
+    run = 0;
     right = 0;
     hp = 100;
     use = 0;
@@ -45,7 +45,7 @@ const movement = {
 
 const textures = {
     death: [[], []],
-    emerge: [[], []],
+    emerge: [[],[]],
     stand: [[], []],
     run: [[], []],
     sword: [[], []],
@@ -113,7 +113,6 @@ function render() {
                 32,
                 32
             );
-            player.emerge--;
         }
         else if (player.state)
             ctx.drawImage(
@@ -268,6 +267,9 @@ function addIntervals() {
         } else {
             frame++;
         }
+        for (player of Object.values(players))
+            if (player.emerge)
+                player.emerge--;
     }, 100);
 }
 
