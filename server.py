@@ -28,6 +28,7 @@ class Game:
         username = websocket.path_params["username"]
         if (player := self.players.get(username)):
             if player.websocket:
+                await websocket.close()
                 return
             player.websocket = websocket
             await websocket.accept()
@@ -36,7 +37,7 @@ class Game:
                 await websocket.send_text(enemy.get_vector())
                 await websocket.send_text(enemy.get_hp())
         elif len(self.players) > 9:
-            return
+            return await websocket.close()
         else:
             self.players[username] = player = Player(websocket, 64, 64)
             pos = player.emerge()
@@ -53,26 +54,28 @@ class Game:
                     if (ws := enemy.websocket):
                         await ws.send_text(pos)
                         await ws.send_text(hp)
-            
+           
     def disable_player(self, websocket: WebSocket) -> None:
         if (player := self.get_player(websocket)):
             player.websocket = None
 
     def get_player(self, websocket) -> Player | None:
         username = websocket.path_params["username"]
-        return self.players.get(username)
+        player = self.players.get(username)
+        if player and player.websocket == websocket:
+            return player
 
     async def send_all(self, msg: str):
         for player in self.players.values():
-            if (ws := player.websocket):
-                await ws.send_text(msg)
+            if player.websocket:
+                await player.websocket.send_text(msg)
 
     async def use(self, websocket, dx=None, dy=None):
         player = self.get_player(websocket)
         if not player or player.use:
             return
 
-        player.use = 8
+        player.use = 16
         await self.send_all(f"{player}:use")
         for name, enemy in tuple(self.players.items()):
             if enemy is player:
@@ -95,9 +98,9 @@ class Game:
             if (((px0 <= ex0 <= px1) or (px0 <= ex1 <= px1))
                 and ((py0 <= ey0 <= py1) or (py0 <= ey1 <= py1))):
                 enemy.hp -= 10
+                await self.send_all(enemy.get_hp())
                 if not enemy.hp:
                     self.players.pop(name)
-                await self.send_all(enemy.get_hp())
 
     async def set_vector(self, websocket, dx, dy):
         player = self.get_player(websocket)

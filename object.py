@@ -21,7 +21,7 @@ class Shell(Object):
 
 class Player(Shell):
     name: str
-    websocket: WebSocket | None
+    websocket: WebSocket | None = None
     hp = 100
     use = 0
     dir = -1
@@ -29,7 +29,7 @@ class Player(Shell):
     def __str__(self):
         return 'p:' + self.name
 
-    def __init__(self, websocket: WebSocket, x, y):
+    def __init__(self, websocket, x, y):
         self.websocket = websocket
         self.name = websocket.path_params["username"]
         self.x = x

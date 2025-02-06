@@ -9,7 +9,13 @@ const ctx = canvas.getContext("2d");
 ctx.imageSmoothingEnabled = false;
 ctx.scale(4, 4);
 
-const socket = new WebSocket("ws://" + document.location.host + "/guest");
+let random = localStorage.getItem("random")
+if (!random) {
+    random = Math.floor(Math.random() * 1000)
+    localStorage.setItem("random", random)
+}
+
+const socket = new WebSocket("ws://" + document.location.host + "/guest" + random);
 let frame = 0;
 //!  constants end
 
@@ -17,17 +23,24 @@ class Player {
     x = null;
     y = null;
     run = 0;
-    right = 0;
     hp = 100;
-    use = 0;
-    emerge = 0;
-    death = 0;
+    use = null;
+    emerge = null;
+    death = null;
+    dir = -1;
 }
 
-class SwordUse {
-    constructor(right) {
-        this.right = right;
-        this.frame = 0;
+class Animation {
+    frame = 0;
+
+    constructor(count) {
+        this.count = count
+    }
+
+    process() {
+        this.frame++
+        if (this.frame == this.count)
+            return true
     }
 }
 
@@ -44,11 +57,11 @@ const movement = {
 };
 
 const textures = {
-    death: [[], []],
-    emerge: [[],[]],
-    stand: [[], []],
-    run: [[], []],
-    sword: [[], []],
+    death: {"-1": [], 1: []},
+    emerge: {"-1": [], 1: []},
+    stand: {"-1": [], 1: []},
+    run: {"-1": [], 1: []},
+    sword: {"-1": [], 1: []}
 };
 
 function loadTextures() {
@@ -56,19 +69,19 @@ function loadTextures() {
     for (let i = 1; i < 7; i++) {
         img = new Image();
         img.src = "/static/img/Dacer/standing/left/" + i + ".png";
-        textures.stand[0].push(img);
+        textures.stand[-1].push(img);
         img = new Image();
         img.src = "/static/img/Dacer/standing/right/" + i + ".png";
         textures.stand[1].push(img);
         img = new Image();
         img.src = "/static/img/Dacer/running/left/" + i + ".png";
-        textures.run[0].push(img);
+        textures.run[-1].push(img);
         img = new Image();
         img.src = "/static/img/Dacer/running/right/" + i + ".png";
         textures.run[1].push(img);
         img = new Image();
         img.src = "/static/img/weapoons/blade_Left_OF" + i + ".png";
-        textures.sword[0].push(img);
+        textures.sword[-1].push(img);
         img = new Image();
         img.src = "/static/img/weapoons/blade_RIght_OF" + i + ".png";
         textures.sword[1].push(img);
@@ -77,15 +90,15 @@ function loadTextures() {
     for (let i = 1; i < 17; i++) {
         img = new Image();
         img.src = "/static/img/Dacer/death/left/" + i + ".png"
-        textures.death[0].push(img)
+        textures.death[-1].push(img)
         img = new Image();
         img.src = "/static/img/Dacer/death/right/" + i + ".png"
         textures.death[1].push(img)
         img = new Image();
-        img.src = "/static/img/Dacer/death/left/" + i + ".png"
-        textures.emerge[0].push(img)
+        img.src = "/static/img/Dacer/rebirth/left/" + i + ".png"
+        textures.emerge[-1].push(img)
         img = new Image();
-        img.src = "/static/img/Dacer/death/right/" + i + ".png"
+        img.src = "/static/img/Dacer/rebirth/right/" + i + ".png"
         textures.emerge[1].push(img)
     }
 
@@ -107,7 +120,7 @@ function render() {
         player = players[id];
         if (player.emerge) {
             ctx.drawImage(
-                textures.emerge[+player.right][player.emerge],
+                textures.emerge[player.dir][player.emerge.frame],
                 player.x - 16,
                 player.y - 16,
                 32,
@@ -116,7 +129,7 @@ function render() {
         }
         else if (player.state)
             ctx.drawImage(
-                textures.run[+player.right][frame % 6],
+                textures.run[player.dir][frame % 6],
                 player.x - 16,
                 player.y - 16,
                 32,
@@ -124,7 +137,7 @@ function render() {
             );
         else
             ctx.drawImage(
-                textures.stand[+player.right][frame % 6],
+                textures.stand[player.dir][frame % 6],
                 player.x - 16,
                 player.y - 16,
                 32,
@@ -133,25 +146,20 @@ function render() {
 
         if (!player.use)
             ctx.drawImage(
-                textures.sword[+player.right][0],
+                textures.sword[player.dir][0],
                 player.x - 16,
                 player.y - 16,
                 32,
                 32
             );
         else {
-            if (player.use.frame == 6) {
-                player.use = null;
-            } else {
-                ctx.drawImage(
-                    textures.sword[+player.use.right][player.use.frame],
-                    player.x - 16,
-                    player.y - 16,
-                    32,
-                    32
-                );
-                player.use.frame++;
-            }
+            ctx.drawImage(
+                textures.sword[player.dir][player.use.frame],
+                player.x - 16,
+                player.y - 16,
+                32,
+                32
+            );
         }
         //! отображение самочуствия нашего ребенка
         let current_hp = (player.hp / 100) * 16;
@@ -241,9 +249,9 @@ function addEventListeners() {
         } else if (cmd == "vec") {
             [x, y] = msg[3].split(",");
             player.state = x != 0 || y != 0;
-            if (x != 0) player.right = x == 1;
+            if (x != 0) player.dir = x;
         } else if (cmd == "use") {
-            player.use = new SwordUse(+player.right);
+            player.use = new Animation(6);
         } else if (cmd == "hp") {
             player.hp = parseInt(msg[3]);
             if (!+player.hp)
@@ -252,7 +260,7 @@ function addEventListeners() {
             [x, y] = msg[3].split(",");
             player.x = x;
             player.y = y;
-            player.emerge = 15;
+            player.emerge = new Animation(16);
         }
         console.log(event.data);
         // render();
@@ -260,17 +268,24 @@ function addEventListeners() {
 }
 
 function addIntervals() {
-    setInterval(() => render(), 41);
+    setInterval(() => render(), 32);
     setInterval(() => {
         if (frame == 5) {
             frame = 0;
         } else {
             frame++;
         }
-        for (player of Object.values(players))
-            if (player.emerge)
-                player.emerge--;
-    }, 100);
+        for (player of Object.values(players)) {
+            if (player.emerge) {
+                if (player.emerge.process())
+                    player.emerge = null
+            }
+            if (player.use) {
+                if (player.use.process())
+                    player.use = null
+            }
+        }
+    }, 50);
 }
 
 function main() {

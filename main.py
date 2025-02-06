@@ -14,10 +14,7 @@ async def index(request):
     return FileResponse("index.html")
 
 
-@asynccontextmanager
-async def lifespan(app):
-    task = create_task(game.loop())
-    yield
+task = create_task(game.loop())
 
 
 app = Starlette(
@@ -27,5 +24,4 @@ app = Starlette(
         Mount('/static', app=StaticFiles(directory="static")),
         WebSocketRoute("/{username:str}", Process)
     ),
-    lifespan=lifespan
 )
