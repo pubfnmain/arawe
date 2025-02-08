@@ -1,6 +1,6 @@
 const canvas = document.createElement("canvas");
-const width = window.innerWidth;
-const height = window.innerHeight;
+const width = document.body.clientWidth;
+const height = document.body.clientHeight;
 canvas.width = width;
 canvas.height = height;
 document.body.append(canvas);
@@ -9,44 +9,43 @@ const ctx = canvas.getContext("2d");
 ctx.imageSmoothingEnabled = false;
 ctx.scale(4, 4);
 
-const socket = new WebSocket("ws://" + document.location.host);
+let random = localStorage.getItem("random");
+if (!random) {
+    random = Math.floor(Math.random() * 1000);
+    localStorage.setItem("random", random);
+}
+
+const socket = new WebSocket(
+    "ws://" + document.location.host + "/guest" + random
+);
 let frame = 0;
 //!  constants end
 
 class Player {
     x = null;
     y = null;
-    state = 0;
-    right = 0;
+    run = 0;
+    hp = 100;
     use = null;
-    hp = 10;
+    emerge = null;
+    death = null;
+    dir = -1;
 }
 
-class SwordUse {
-    constructor(right) {
-        this.right = right;
-        this.frame = 0;
+class Animation {
+    frame = 0;
+
+    constructor(count) {
+        this.count = count;
+    }
+
+    process() {
+        this.frame++;
+        if (this.frame == this.count) return true;
     }
 }
 
-const players = {
-    // 1: {
-    //     x: 150,
-    //     y: 100,
-    //     state: 0,
-    //     right: 0,
-    //     use: null,
-    //     hp: 10,
-    // },
-    // 2: {
-    //     x: 100,
-    //     y: 100,
-    //     state: 0,
-    //     right: 0,
-    //     use: null,
-    //     hp: 10,
-    // },
-};
+const players = {};
 const shells = {};
 const objects = {};
 const items = {};
@@ -59,9 +58,11 @@ const movement = {
 };
 
 const textures = {
-    player_staying: [[], []],
-    player_running: [[], []],
-    sword: [[], []],
+    death: { "-1": [], 1: [] },
+    emerge: { "-1": [], 1: [] },
+    stand: { "-1": [], 1: [] },
+    run: { "-1": [], 1: [] },
+    sword: { "-1": [], 1: [] },
 };
 
 const joystick = {
@@ -74,29 +75,50 @@ const joystick = {
     active: false,
 };
 
+function isMobile() {
+    return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
+        navigator.userAgent
+    );
+}
+
 function loadTextures() {
     let img;
     for (let i = 1; i < 7; i++) {
         img = new Image();
         img.src = "/static/img/Dacer/standing/left/" + i + ".png";
-        textures.player_staying[0].push(img);
+        textures.stand[-1].push(img);
         img = new Image();
         img.src = "/static/img/Dacer/standing/right/" + i + ".png";
-        textures.player_staying[1].push(img);
+        textures.stand[1].push(img);
         img = new Image();
         img.src = "/static/img/Dacer/running/left/" + i + ".png";
-        textures.player_running[0].push(img);
+        textures.run[-1].push(img);
         img = new Image();
         img.src = "/static/img/Dacer/running/right/" + i + ".png";
-        textures.player_running[1].push(img);
+        textures.run[1].push(img);
         img = new Image();
-        img.src = "/static/img/weapoons/blade_Left_OF" + i + ".png";
-        textures.sword[0].push(img);
+        img.src = "/static/img/weapoons/blade/left/" + i + ".png";
+        textures.sword[-1].push(img);
         img = new Image();
-        img.src = "/static/img/weapoons/blade_RIght_OF" + i + ".png";
+        img.src = "/static/img/weapoons/blade/right/" + i + ".png";
         textures.sword[1].push(img);
-        // enemy.textures.push(img)
     }
+
+    for (let i = 1; i < 17; i++) {
+        img = new Image();
+        img.src = "/static/img/Dacer/death/left/" + i + ".png";
+        textures.death[-1].push(img);
+        img = new Image();
+        img.src = "/static/img/Dacer/death/right/" + i + ".png";
+        textures.death[1].push(img);
+        img = new Image();
+        img.src = "/static/img/Dacer/rebirth/left/" + i + ".png";
+        textures.emerge[-1].push(img);
+        img = new Image();
+        img.src = "/static/img/Dacer/rebirth/right/" + i + ".png";
+        textures.emerge[1].push(img);
+    }
+
     // for (let i = 1; i < 7; i++) {}
     // console.log(player);
     // const image = new Image();
@@ -105,7 +127,7 @@ function loadTextures() {
 }
 
 function render() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    isMobile() && ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "#1f1f1f";
     ctx.fillRect(0, 0, width, height);
     ctx.fillStyle = "#0fef7f";
@@ -114,9 +136,17 @@ function render() {
     let player;
     for (const id of Object.keys(players)) {
         player = players[id];
-        if (player.state)
+        if (player.emerge) {
             ctx.drawImage(
-                textures.player_running[+player.right][frame % 6],
+                textures.emerge[player.dir][player.emerge.frame],
+                player.x - 16,
+                player.y - 16,
+                32,
+                32
+            );
+        } else if (player.state)
+            ctx.drawImage(
+                textures.run[player.dir][frame % 6],
                 player.x - 16,
                 player.y - 16,
                 32,
@@ -124,7 +154,7 @@ function render() {
             );
         else
             ctx.drawImage(
-                textures.player_staying[+player.right][frame % 6],
+                textures.stand[player.dir][frame % 6],
                 player.x - 16,
                 player.y - 16,
                 32,
@@ -133,25 +163,20 @@ function render() {
 
         if (!player.use)
             ctx.drawImage(
-                textures.sword[+player.right][0],
+                textures.sword[player.dir][0],
                 player.x - 16,
                 player.y - 16,
                 32,
                 32
             );
         else {
-            if (player.use.frame == 6) {
-                player.use = null;
-            } else {
-                ctx.drawImage(
-                    textures.sword[+player.use.right][player.use.frame],
-                    player.x - 16,
-                    player.y - 16,
-                    32,
-                    32
-                );
-                player.use.frame++;
-            }
+            ctx.drawImage(
+                textures.sword[player.dir][player.use.frame],
+                player.x - 16,
+                player.y - 16,
+                32,
+                32
+            );
         }
         //! отображение самочуствия нашего ребенка
         let current_hp = (player.hp / 100) * 16;
@@ -163,21 +188,23 @@ function render() {
         ctx.lineWidth = 0.5;
         ctx.strokeRect(hp_line_x, hp_line_y, 16, 2);
     }
-    // джойстик Тимура start
-    ctx.beginPath();
-    ctx.arc(joystick.x, joystick.y, joystick.radius, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(
-        joystick.stickX,
-        joystick.stickY,
-        joystick.stickRadius,
-        0,
-        Math.PI * 2
-    );
-    ctx.fillStyle = "rgb(255, 255, 255)";
-    ctx.fill();
+    if (isMobile()) {
+        // джойстик Тимура start
+        ctx.beginPath();
+        ctx.arc(joystick.x, joystick.y, joystick.radius, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(
+            joystick.stickX,
+            joystick.stickY,
+            joystick.stickRadius,
+            0,
+            Math.PI * 2
+        );
+        ctx.fillStyle = "rgb(255, 255, 255)";
+        ctx.fill();
+    }
     // джойстик Тимура End
 }
 
@@ -189,7 +216,6 @@ function send_vector() {
     if (movement.forward) y -= 1;
     if (movement.backward) y += 1;
     socket.send(`vec:${x},${y}`);
-    // console.log(`vec:${x},${y}`);
 }
 
 function addEventListeners() {
@@ -255,17 +281,20 @@ function addEventListeners() {
         } else if (cmd == "vec") {
             [x, y] = msg[3].split(",");
             player.state = x != 0 || y != 0;
-            // if (x != 0) {
-            if (x > 0) player.right = true;
-            if (x < 0) player.right = false;
-            // }
+            if (x > 0) player.dir = 1;
+            if (x < 0) player.dir = -1;
         } else if (cmd == "use") {
-            player.use = new SwordUse(+player.right);
+            player.use = new Animation(6);
         } else if (cmd == "hp") {
             player.hp = parseInt(msg[3]);
-            if (!player.hp) delete players[msg[1]];
+            if (!+player.hp) delete players[msg[1]];
+        } else if (cmd == "emerge") {
+            [x, y] = msg[3].split(",");
+            player.x = x;
+            player.y = y;
+            player.emerge = new Animation(16);
         }
-        // console.log(event.data);
+        console.log(event.data);
         // render();
     });
 }
@@ -278,84 +307,94 @@ function addIntervals() {
         } else {
             frame++;
         }
+        for (player of Object.values(players)) {
+            if (player.emerge) {
+                if (player.emerge.process()) player.emerge = null;
+            }
+            if (player.use) {
+                if (player.use.process()) player.use = null;
+            }
+        }
     }, 100);
 }
 
-function vectorHandler(dx, dy) {
-    // const length = Math.sqrt(dx * dx + dy * dy);
-    // if (length > 0) {
-    //     const x = (dx / length).toFixed(3);
-    //     const y = (dy / length).toFixed(3);
-    //     socket.send(`vec:${x},${y}`);
-    // } else {
-    //     socket.send(`vec:0,0`);
-    // }
-    if (dx > 10) {
-        movement.left = false;
-        movement.right = true;
-    } else if (dx < -10) {
-        movement.right = false;
-        movement.left = true;
-    }
-    if (dy > 10) {
-        movement.backward = true;
-        movement.forward = false;
-    } else if (dy < -10) {
-        movement.backward = false;
-        movement.forward = true;
-    }
-    if (dx == 0 && dy == 0) {
-        movement.backward = false;
-        movement.forward = false;
-        movement.left = false;
-        movement.right = false;
-    }
-    send_vector();
-}
-
-canvas.addEventListener("touchstart", (event) => {
-    for (let touch of event.touches) {
-        const rect = canvas.getBoundingClientRect();
-        const touchX = (touch.clientX - rect.left) / 4;
-        const touchY = (touch.clientY - rect.top) / 4;
-        const dx = touchX - joystick.x;
-        const dy = touchY - joystick.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance <= joystick.radius) {
-            joystick.active = true;
-        }
-    }
-});
-
-canvas.addEventListener("touchmove", (event) => {
-    if (!joystick.active) return;
-    for (let touch of event.touches) {
-        const rect = canvas.getBoundingClientRect();
-        const touchX = (touch.clientX - rect.left) / 4;
-        const touchY = (touch.clientY - rect.top) / 4;
-        const dx = touchX - joystick.x;
-        const dy = touchY - joystick.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        const maxDistance = joystick.radius;
-
-        if (distance > maxDistance) {
-            const angle = Math.atan2(dy, dx);
-            joystick.stickX = joystick.x + Math.cos(angle) * maxDistance;
-            joystick.stickY = joystick.y + Math.sin(angle) * maxDistance;
+if (isMobile()) {
+    function vectorHandler(dx, dy) {
+        const length = Math.sqrt(dx * dx + dy * dy);
+        if (length > 0) {
+            const x = (dx / length).toFixed(3);
+            const y = (dy / length).toFixed(3);
+            socket.send(`vec:${x},${y}`);
         } else {
-            joystick.stickX = touchX;
-            joystick.stickY = touchY;
+            socket.send(`vec:0,0`);
         }
-        vectorHandler(dx, dy);
+        // if (dx > 10) {
+        //     movement.left = false;
+        //     movement.right = true;
+        // } else if (dx < -10) {
+        //     movement.right = false;
+        //     movement.left = true;
+        // }
+        // if (dy > 10) {
+        //     movement.backward = true;
+        //     movement.forward = false;
+        // } else if (dy < -10) {
+        //     movement.backward = false;
+        //     movement.forward = true;
+        // }
+        // if (dx == 0 && dy == 0) {
+        //     movement.backward = false;
+        //     movement.forward = false;
+        //     movement.left = false;
+        //     movement.right = false;
+        // }
+        // send_vector();
     }
-});
 
-canvas.addEventListener("touchend", () => {
-    joystick.active = false;
-    joystick.stickX = joystick.x;
-    joystick.stickY = joystick.y;
-    vectorHandler(0, 0); // Остановка
-});
+    canvas.addEventListener("touchstart", (event) => {
+        for (let touch of event.touches) {
+            const rect = canvas.getBoundingClientRect();
+            const touchX = (touch.clientX - rect.left) / 4;
+            const touchY = (touch.clientY - rect.top) / 4;
+            const dx = touchX - joystick.x;
+            const dy = touchY - joystick.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance <= joystick.radius) {
+                joystick.active = true;
+            }
+        }
+    });
+
+    canvas.addEventListener("touchmove", (event) => {
+        if (!joystick.active) return;
+        for (let touch of event.touches) {
+            const rect = canvas.getBoundingClientRect();
+            const touchX = (touch.clientX - rect.left) / 4;
+            const touchY = (touch.clientY - rect.top) / 4;
+            const dx = touchX - joystick.x;
+            const dy = touchY - joystick.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const maxDistance = joystick.radius;
+
+            if (distance > maxDistance) {
+                const angle = Math.atan2(dy, dx);
+                joystick.stickX = joystick.x + Math.cos(angle) * maxDistance;
+                joystick.stickY = joystick.y + Math.sin(angle) * maxDistance;
+            } else {
+                joystick.stickX = touchX;
+                joystick.stickY = touchY;
+            }
+            vectorHandler(dx, dy);
+        }
+    });
+
+    canvas.addEventListener("touchend", () => {
+        joystick.active = false;
+        joystick.stickX = joystick.x;
+        joystick.stickY = joystick.y;
+        vectorHandler(0, 0); // Остановка
+    });
+}
 
 function main() {
     addEventListeners();

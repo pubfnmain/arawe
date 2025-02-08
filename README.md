@@ -6,7 +6,8 @@ Future domain: arawe.dayrain.uk
 
 ### Server to Client
 
-- `p:n(int)` - client id (init)
+- `p:n(int)` - new player
+- `p:n(int):hp` - player hp
 - `p:n(int):set:id(int)` - player set item
 - `p:n(int):pos:x(int),y(int)` - player changed position
 - `p:n(int):use:dx(float)[-1;1],dy(float)[-1;1]` - player used item
