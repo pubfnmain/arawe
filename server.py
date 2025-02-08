@@ -54,7 +54,7 @@ class Game:
                     if (ws := enemy.websocket):
                         await ws.send_text(pos)
                         await ws.send_text(hp)
-           
+            
     def disable_player(self, websocket: WebSocket) -> None:
         if (player := self.get_player(websocket)):
             player.websocket = None
@@ -139,8 +139,10 @@ class Process(WebSocketEndpoint):
                 return
             if len(args) != 2:
                 return
-            dx = vector(args[0])
-            dy = vector(args[1])
+            dx = max(-1, min(1, float(args[0])))
+            dy = max(-1, min(1, float(args[1])))
+            # dx = vector(args[0])
+            # dy = vector(args[1])
             if dx is None or dy is None:
                 return
             await game.set_vector(websocket, dx, dy)       

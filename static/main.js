@@ -9,13 +9,15 @@ const ctx = canvas.getContext("2d");
 ctx.imageSmoothingEnabled = false;
 ctx.scale(4, 4);
 
-let random = localStorage.getItem("random")
+let random = localStorage.getItem("random");
 if (!random) {
-    random = Math.floor(Math.random() * 1000)
-    localStorage.setItem("random", random)
+    random = Math.floor(Math.random() * 1000);
+    localStorage.setItem("random", random);
 }
 
-const socket = new WebSocket("ws://" + document.location.host + "/guest" + random);
+const socket = new WebSocket(
+    "ws://" + document.location.host + "/guest" + random
+);
 let frame = 0;
 //!  constants end
 
@@ -34,13 +36,12 @@ class Animation {
     frame = 0;
 
     constructor(count) {
-        this.count = count
+        this.count = count;
     }
 
     process() {
-        this.frame++
-        if (this.frame == this.count)
-            return true
+        this.frame++;
+        if (this.frame == this.count) return true;
     }
 }
 
@@ -57,12 +58,28 @@ const movement = {
 };
 
 const textures = {
-    death: {"-1": [], 1: []},
-    emerge: {"-1": [], 1: []},
-    stand: {"-1": [], 1: []},
-    run: {"-1": [], 1: []},
-    sword: {"-1": [], 1: []}
+    death: { "-1": [], 1: [] },
+    emerge: { "-1": [], 1: [] },
+    stand: { "-1": [], 1: [] },
+    run: { "-1": [], 1: [] },
+    sword: { "-1": [], 1: [] },
 };
+
+const joystick = {
+    x: 30,
+    y: canvas.height / 4 - 30,
+    radius: 20,
+    stickRadius: 10,
+    stickX: 30,
+    stickY: canvas.height / 4 - 30,
+    active: false,
+};
+
+function isMobile() {
+    return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
+        navigator.userAgent
+    );
+}
 
 function loadTextures() {
     let img;
@@ -80,26 +97,26 @@ function loadTextures() {
         img.src = "/static/img/Dacer/running/right/" + i + ".png";
         textures.run[1].push(img);
         img = new Image();
-        img.src = "/static/img/weapoons/blade_Left_OF" + i + ".png";
+        img.src = "/static/img/weapoons/blade/left/" + i + ".png";
         textures.sword[-1].push(img);
         img = new Image();
-        img.src = "/static/img/weapoons/blade_RIght_OF" + i + ".png";
+        img.src = "/static/img/weapoons/blade/right/" + i + ".png";
         textures.sword[1].push(img);
     }
 
     for (let i = 1; i < 17; i++) {
         img = new Image();
-        img.src = "/static/img/Dacer/death/left/" + i + ".png"
-        textures.death[-1].push(img)
+        img.src = "/static/img/Dacer/death/left/" + i + ".png";
+        textures.death[-1].push(img);
         img = new Image();
-        img.src = "/static/img/Dacer/death/right/" + i + ".png"
-        textures.death[1].push(img)
+        img.src = "/static/img/Dacer/death/right/" + i + ".png";
+        textures.death[1].push(img);
         img = new Image();
-        img.src = "/static/img/Dacer/rebirth/left/" + i + ".png"
-        textures.emerge[-1].push(img)
+        img.src = "/static/img/Dacer/rebirth/left/" + i + ".png";
+        textures.emerge[-1].push(img);
         img = new Image();
-        img.src = "/static/img/Dacer/rebirth/right/" + i + ".png"
-        textures.emerge[1].push(img)
+        img.src = "/static/img/Dacer/rebirth/right/" + i + ".png";
+        textures.emerge[1].push(img);
     }
 
     // for (let i = 1; i < 7; i++) {}
@@ -110,6 +127,7 @@ function loadTextures() {
 }
 
 function render() {
+    isMobile() && ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "#1f1f1f";
     ctx.fillRect(0, 0, width, height);
     ctx.fillStyle = "#0fef7f";
@@ -126,8 +144,7 @@ function render() {
                 32,
                 32
             );
-        }
-        else if (player.state)
+        } else if (player.state)
             ctx.drawImage(
                 textures.run[player.dir][frame % 6],
                 player.x - 16,
@@ -171,8 +188,24 @@ function render() {
         ctx.lineWidth = 0.5;
         ctx.strokeRect(hp_line_x, hp_line_y, 16, 2);
     }
-
-    // ctx.drawImage(enemy.textures[0], enemy.x, enemy.y, 64, 64);
+    if (isMobile()) {
+        // джойстик Тимура start
+        ctx.beginPath();
+        ctx.arc(joystick.x, joystick.y, joystick.radius, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(
+            joystick.stickX,
+            joystick.stickY,
+            joystick.stickRadius,
+            0,
+            Math.PI * 2
+        );
+        ctx.fillStyle = "rgb(255, 255, 255)";
+        ctx.fill();
+    }
+    // джойстик Тимура End
 }
 
 function send_vector() {
@@ -225,8 +258,7 @@ function addEventListeners() {
                 movement.right = true;
                 send_vector();
                 break;
-
-                        }
+        }
         // send_vector();
     });
 
@@ -249,13 +281,13 @@ function addEventListeners() {
         } else if (cmd == "vec") {
             [x, y] = msg[3].split(",");
             player.state = x != 0 || y != 0;
-            if (x != 0) player.dir = x;
+            if (x > 0) player.dir = 1;
+            if (x < 0) player.dir = -1;
         } else if (cmd == "use") {
             player.use = new Animation(6);
         } else if (cmd == "hp") {
             player.hp = parseInt(msg[3]);
-            if (!+player.hp)
-                delete players[msg[1]]
+            if (!+player.hp) delete players[msg[1]];
         } else if (cmd == "emerge") {
             [x, y] = msg[3].split(",");
             player.x = x;
@@ -277,15 +309,91 @@ function addIntervals() {
         }
         for (player of Object.values(players)) {
             if (player.emerge) {
-                if (player.emerge.process())
-                    player.emerge = null
+                if (player.emerge.process()) player.emerge = null;
             }
             if (player.use) {
-                if (player.use.process())
-                    player.use = null
+                if (player.use.process()) player.use = null;
             }
         }
-    }, 50);
+    }, 100);
+}
+
+if (isMobile()) {
+    function vectorHandler(dx, dy) {
+        const length = Math.sqrt(dx * dx + dy * dy);
+        if (length > 0) {
+            const x = (dx / length).toFixed(3);
+            const y = (dy / length).toFixed(3);
+            socket.send(`vec:${x},${y}`);
+        } else {
+            socket.send(`vec:0,0`);
+        }
+        // if (dx > 10) {
+        //     movement.left = false;
+        //     movement.right = true;
+        // } else if (dx < -10) {
+        //     movement.right = false;
+        //     movement.left = true;
+        // }
+        // if (dy > 10) {
+        //     movement.backward = true;
+        //     movement.forward = false;
+        // } else if (dy < -10) {
+        //     movement.backward = false;
+        //     movement.forward = true;
+        // }
+        // if (dx == 0 && dy == 0) {
+        //     movement.backward = false;
+        //     movement.forward = false;
+        //     movement.left = false;
+        //     movement.right = false;
+        // }
+        // send_vector();
+    }
+
+    canvas.addEventListener("touchstart", (event) => {
+        for (let touch of event.touches) {
+            const rect = canvas.getBoundingClientRect();
+            const touchX = (touch.clientX - rect.left) / 4;
+            const touchY = (touch.clientY - rect.top) / 4;
+            const dx = touchX - joystick.x;
+            const dy = touchY - joystick.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance <= joystick.radius) {
+                joystick.active = true;
+            }
+        }
+    });
+
+    canvas.addEventListener("touchmove", (event) => {
+        if (!joystick.active) return;
+        for (let touch of event.touches) {
+            const rect = canvas.getBoundingClientRect();
+            const touchX = (touch.clientX - rect.left) / 4;
+            const touchY = (touch.clientY - rect.top) / 4;
+            const dx = touchX - joystick.x;
+            const dy = touchY - joystick.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const maxDistance = joystick.radius;
+
+            if (distance > maxDistance) {
+                const angle = Math.atan2(dy, dx);
+                joystick.stickX = joystick.x + Math.cos(angle) * maxDistance;
+                joystick.stickY = joystick.y + Math.sin(angle) * maxDistance;
+            } else {
+                joystick.stickX = touchX;
+                joystick.stickY = touchY;
+            }
+            vectorHandler(dx, dy);
+        }
+    });
+
+    canvas.addEventListener("touchend", () => {
+        joystick.active = false;
+        joystick.stickX = joystick.x;
+        joystick.stickY = joystick.y;
+        vectorHandler(0, 0); // Остановка
+    });
 }
 
 function main() {
