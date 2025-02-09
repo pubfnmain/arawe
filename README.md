@@ -47,7 +47,8 @@ Future domain: arawe.dayrain.uk
 ## Setup
 
 ```python -m venv .venv
-pip install -r requirements.txt```
-```redis-server```
-```python server/__init__.py```
-```python -m server```
+pip install -r requirements.txt
+redis-server
+python server/__init__.py
+python -m server
+```
