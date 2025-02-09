@@ -6,6 +6,8 @@ in pkgs.mkShell {
       starlette
       websockets
       uvicorn
+      redis
+      hiredis
     ]))
   ];
 }

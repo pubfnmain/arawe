@@ -1,27 +1,26 @@
-from asyncio import sleep, create_task
+from asyncio import create_task
 from contextlib import asynccontextmanager
 
 from starlette.applications import Starlette
-from starlette.responses import FileResponse
 from starlette.routing import Route, Mount, WebSocketRoute
 from starlette.staticfiles import StaticFiles
-from starlette.endpoints import WebSocketEndpoint
 
-from server import Process, game
-
-
-async def index(request):
-    return FileResponse("index.html")
+from .service import listen
+from .endpoints import index, Socket
 
 
-task = create_task(game.loop())
+@asynccontextmanager
+async def lifespan(app):
+    task = create_task(listen())
+    yield
 
 
 app = Starlette(
     debug=True,
+    lifespan=lifespan,
     routes=(
         Route('/', index),
         Mount('/static', app=StaticFiles(directory="static")),
-        WebSocketRoute("/{username:str}", Process)
+        WebSocketRoute("/{name:str}", Socket)
     ),
 )
