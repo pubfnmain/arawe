@@ -39,12 +39,12 @@ async def create_player(websocket: WebSocket) -> None:
             "state": 1,
             "name": name
         })
-    await r.publish("main", player + ":emerge:64,64")
+        await r.publish("main", player + ":emerge:64,64")
     sockets[websocket] = player
     players = await r.hvals("players")
     for player in players:
         p = await r.hgetall(player)
-        await websocket.send_text(f"p:{p["name"]}:pos:{p['x']},{p['y']}")
+        await websocket.send_text(f"{player}:pos:{p['x']},{p['y']}")
 
        
 async def disable_player(websocket: WebSocket) -> None:
