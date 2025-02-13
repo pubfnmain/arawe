@@ -3,3 +3,13 @@ body {
     padding: 0;
     box-sizing: border-box;
 }
+.full_screen_btn {
+    width: 100vw;
+    height: 40px;
+    background-color: #fff;
+    border: none;
+    color: black;
+    font-family: "Courier New", Courier, monospace;
+    /* font-weight: ; */
+    font-size: 18px;
+}

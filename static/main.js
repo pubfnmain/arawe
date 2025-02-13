@@ -319,6 +319,26 @@ function addIntervals() {
 }
 
 if (isMobile()) {
+    let fullScreenButton = document.createElement("button");
+    fullScreenButton.classList.add("full_screen_btn");
+    document.body.before(fullScreenButton);
+    fullScreenButton.innerText = "полный экран ";
+    fullScreenButton.addEventListener("click", () => {
+        goFullScreen();
+        fullScreenButton.remove();
+    });
+    function goFullScreen() {
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen();
+        } else if (document.documentElement.mozRequestFullScreen) {
+            document.documentElement.mozRequestFullScreen();
+        } else if (document.documentElement.webkitRequestFullscreen) {
+            document.documentElement.webkitRequestFullscreen();
+        } else if (document.documentElement.msRequestFullscreen) {
+            document.documentElement.msRequestFullscreen();
+        }
+    }
+
     function vectorHandler(dx, dy) {
         const length = Math.sqrt(dx * dx + dy * dy);
         if (length > 0) {
