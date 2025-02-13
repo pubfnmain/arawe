@@ -4,7 +4,7 @@ from starlette.endpoints import WebSocketEndpoint
 from starlette.responses import FileResponse
 from starlette.websockets import WebSocket
 
-from .service import create_player, disable_player, sockets, set_player_vector, use
+from . import game
 
 
 async def index(request):
@@ -15,19 +15,19 @@ class Socket(WebSocketEndpoint):
     encoding = "text"
 
     async def on_connect(self, websocket: WebSocket) -> None:
-        await websocket.accept()
-        await create_player(websocket)
+        await game.connect(websocket)
 
     async def on_receive(self, websocket: WebSocket, data) -> None:
-        player = sockets.get(websocket)
+        player = game.players.get(websocket.path_params["name"])
         if not player:
             return
         # TODO: regular expressions
         if data == "use":
-            await use(player)
-        elif (m := match(r"vec:([+-]?\d+),([+-]?\d+)", data)):
-            # TODO: float args
-            await set_player_vector(player, int(m.group(1)), int(m.group(2)))
+            await game.use(player)
+        elif (m := match(r"aux:([+-]?(?:\d*\.*\d+)),([+-]?(?:\d*\.*\d+))", data)):
+            await game.aux(player, float(m.group(1)), float(m.group(2)))
+        elif (m := match(r"vec:([+-]?(?:\d*\.*\d+)),([+-]?(?:\d*\.*\d+))", data)):
+            await game.vec(player, float(m.group(1)), float(m.group(2)))
     
     async def on_disconnect(self, websocket, close_code) -> None:
-        await disable_player(websocket)
+        await game.disconnect(websocket)

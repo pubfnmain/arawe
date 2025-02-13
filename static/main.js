@@ -1,6 +1,7 @@
 const canvas = document.createElement("canvas");
 const width = document.body.clientWidth;
 const height = document.body.clientHeight;
+
 canvas.width = width;
 canvas.height = height;
 document.body.append(canvas);
@@ -63,6 +64,7 @@ const textures = {
     stand: { "-1": [], 1: [] },
     run: { "-1": [], 1: [] },
     sword: { "-1": [], 1: [] },
+    shuriken: null
 };
 
 const joystick = {
@@ -118,6 +120,9 @@ function loadTextures() {
         img.src = "/static/img/Dacer/rebirth/right/" + i + ".png";
         textures.emerge[1].push(img);
     }
+    img = new Image();
+    img.src = "/static/img/weapoons/shuriken.png"
+    textures.shuriken = img;
 
     // for (let i = 1; i < 7; i++) {}
     // console.log(player);
@@ -126,12 +131,24 @@ function loadTextures() {
     // enemy.textures[0] = image;
 }
 
-function render() {
-    isMobile() && ctx.clearRect(0, 0, canvas.width, canvas.height);
+function clear() {
     ctx.fillStyle = "#1f1f1f";
     ctx.fillRect(0, 0, width, height);
+}
+
+function render() {
+    // isMobile() && ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "#0fef7f";
     // console.log(player);
+    for (const shell of Object.values(shells)) {
+        ctx.drawImage(
+            textures.shuriken,
+            shell.x - 8,
+            shell.y - 8,
+            16,
+            16
+        )
+    }
 
     let player;
     for (const id of Object.keys(players)) {
@@ -258,41 +275,52 @@ function addEventListeners() {
                 movement.right = true;
                 send_vector();
                 break;
+            case "Space":
+                // socket.send("use");
+                socket.send("aux:-1,0")
+                break;
         }
         // send_vector();
     });
 
     document.addEventListener("mousedown", (event) => {
-        if (!event.button) {
+        if (!event.button)
             socket.send("use");
-        }
     });
     // socket.addEventListener("open", (event) => {});
     loadTextures();
     socket.addEventListener("message", (event) => {
         let msg = event.data.split(":");
-        let player = players[msg[1]];
-        if (!player) player = players[msg[1]] = new Player();
-        let cmd = msg[2];
-        if (cmd == "pos") {
-            [x, y] = msg[3].split(",");
-            player.x = x;
-            player.y = y;
-        } else if (cmd == "vec") {
-            [x, y] = msg[3].split(",");
-            player.state = x != 0 || y != 0;
-            if (x > 0) player.dir = 1;
-            if (x < 0) player.dir = -1;
-        } else if (cmd == "use") {
-            player.use = new Animation(6);
-        } else if (cmd == "hp") {
-            player.hp = parseInt(msg[3]);
-            if (!+player.hp) delete players[msg[1]];
-        } else if (cmd == "emerge") {
-            [x, y] = msg[3].split(",");
-            player.x = x;
-            player.y = y;
-            player.emerge = new Animation(16);
+        if (msg[0] == "p") {
+            let player = players[msg[1]];
+            if (!player) player = players[msg[1]] = new Player();
+            let cmd = msg[2];
+            if (cmd == "pos") {
+                [x, y] = msg[3].split(",");
+                player.x = x;
+                player.y = y;
+            } else if (cmd == "vec") {
+                [x, y] = msg[3].split(",");
+                player.state = x != 0 || y != 0;
+                if (x > 0) player.dir = 1;
+                if (x < 0) player.dir = -1;
+            } else if (cmd == "use") {
+                player.use = new Animation(6);
+            } else if (cmd == "hp") {
+                player.hp = parseInt(msg[3]);
+                if (!+player.hp) delete players[msg[1]];
+            } else if (cmd == "emerge") {
+                [x, y] = msg[3].split(",");
+                player.x = x;
+                player.y = y;
+                player.emerge = new Animation(16);
+            }
+        } else if (msg[0] == "s") {
+            let shell = shells[msg[1]]
+            const [x, y] = msg[3].split(",");
+            if (!shell) shell = shells[msg[1]] = {}
+            shell.x = x
+            shell.y = y
         }
         console.log(event.data);
         // render();
@@ -300,7 +328,10 @@ function addEventListeners() {
 }
 
 function addIntervals() {
-    setInterval(() => render(), 32);
+    setInterval(() => {
+        clear()
+        render()
+    }, 32);
     setInterval(() => {
         if (frame == 5) {
             frame = 0;
@@ -319,6 +350,12 @@ function addIntervals() {
 }
 
 if (isMobile()) {
+    const button = document.createElement("button")
+    button.innerText = "full"
+    button.onclick = () => {
+        document.body.requestFullscreen()
+    }
+    document.body.appendChild(button)
     function vectorHandler(dx, dy) {
         const length = Math.sqrt(dx * dx + dy * dy);
         if (length > 0) {

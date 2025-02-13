@@ -1,5 +1,15 @@
 body {
+    cursor: url("/static/img/cursor.png") 32 32, auto;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+}
+
+
+button {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 50px;
+    left: 0;
 }

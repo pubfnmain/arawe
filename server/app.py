@@ -5,13 +5,13 @@ from starlette.applications import Starlette
 from starlette.routing import Route, Mount, WebSocketRoute
 from starlette.staticfiles import StaticFiles
 
-from .service import listen
+from . import game
 from .endpoints import index, Socket
 
 
 @asynccontextmanager
 async def lifespan(app):
-    task = create_task(listen())
+    task = create_task(game.loop())
     yield
 
 
