@@ -1,9 +1,12 @@
-from asyncio import sleep
+from asyncio import gather, sleep, create_task, Lock
 
-from starlette.websockets import WebSocket
+from starlette.websockets import WebSocket, WebSocketDisconnect, WebSocketState
 
 from . import WIDTH, HEIGHT
 from .object import Player, Shell
+
+
+lock = Lock()
 
 
 class Game:
@@ -15,19 +18,19 @@ class Game:
         await ws.accept()
         self.sockets.append(ws)
 
-    async def disconnect(self, ws: WebSocket):
+    def disconnect(self, ws: WebSocket):
         name = ws.path_params["name"]
         player = self.players.get(name)
         if player:
             player.state = False
         self.sockets.remove(ws)
 
-    async def connect(self, ws: WebSocket):
+    async def connect(self, ws: WebSocket) -> Player | None:
         name = ws.path_params["name"]
         player = self.players.get(name)
         if player:
             if player.state:
-                return
+                return None
             player.state = True
             await self.add_socket(ws)
         else:
@@ -36,15 +39,18 @@ class Game:
             for socket in self.sockets:
                 await socket.send_text(player.new())
 
-        for name, player in self.players.items():
-            await ws.send_text(player.get_pos())
-            await ws.send_text(player.repr + ":name:" + name)
-            await ws.send_text(player.get_hp())
-            await ws.send_text(player.get_sh())
+        for name, p in self.players.items():
+            await ws.send_text(p.get_pos())
+            await ws.send_text(p.repr + ":name:" + name)
+            await ws.send_text(p.get_hp())
+            await ws.send_text(p.get_sh())
+
+        return player       
 
     async def send(self, msg):
+        # print(self.sockets)
         for socket in self.sockets:
-            await socket.send_text(msg) 
+            await socket.send_text(msg)
 
     async def use(self, player: Player):
         if player.use:
@@ -66,7 +72,7 @@ class Game:
         if player.aux:
             return
 
-        player.aux = 8
+        player.aux = 16
         self.shells.append(Shell(player, dx, dy))
 
     async def vec(self, player, dx, dy):
@@ -97,12 +103,14 @@ class Game:
 
                 await self.send(shell.get_pos())
 
-                # for name in tuple(self.players):
-                #     p = self.players[name]
-                #     if abs(shell.x - p.x) <= 8 and abs(shell.y - p.y) <= 8:
-                #         p.hp -= 10
-                #         if not p.hp:
-                #             del self.players[name]
-                #         await self.send(p.get_hp())
+                for name in tuple(self.players):
+                    p = self.players[name]
+                    if p is shell.p:
+                        continue
+                    if abs(shell.x - p.x) <= 8 and abs(shell.y - p.y) <= 8:
+                        p.hp -= 10
+                        if not p.hp:
+                            del self.players[name]
+                        await self.send(p.get_hp())
 
             await sleep(0.03)
