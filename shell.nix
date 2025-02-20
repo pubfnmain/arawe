@@ -7,6 +7,7 @@ in pkgs.mkShell {
       uvicorn
       starlette
       aiohttp
+      aiohttp_devtools
     ]))
   ];
 }

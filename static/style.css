@@ -1,5 +1,5 @@
 body {
-    cursor: url("/static/img/cursor.png") 32 32, auto;
+    cursor: url("/static/img/cursor.png") 16 16, auto;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -8,8 +8,12 @@ body {
 
 button {
     position: absolute;
-    right: 0;
-    top: 0;
-    height: 50px;
-    left: 0;
+    top: 1rem;
+    left: 1rem;
+    width: 2.5rem
+}
+
+@font-face {
+    font-family: "Monocraft";
+    src: url("/static/Monocraft.ttf");
 }

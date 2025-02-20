@@ -28,6 +28,7 @@ class Game:
             self.sockets.append(ws)
             for socket in self.sockets:
                 await socket.send_str(player.new())
+                await ws.send_str(player.repr + ":name:" + name)
 
         for name, p in self.players.items():
             await ws.send_str(p.get_pos())
@@ -38,11 +39,11 @@ class Game:
         return player       
 
     async def send(self, msg):
-        try:
-            for socket in self.sockets:
+        for socket in self.sockets:
+            try:
                 await socket.send_str(msg)
-        except:
-            pass
+            except:
+                pass
 
     async def use(self, player: Player):
         if player.use:

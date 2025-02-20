@@ -9,8 +9,11 @@ document.body.append(canvas);
 const ctx = canvas.getContext("2d");
 ctx.imageSmoothingEnabled = false;
 const fixedWidth = 640
+ctx.font = "8px Monocraft"
+ctx.textAlign = "center"
 ctx.save()
-ctx.scale(width / fixedWidth, width / fixedWidth);
+ctx.scale(3, 3)
+// ctx.scale(width / fixedWidth, width / fixedWidth);
 
 let random = localStorage.getItem("random");
 if (!random) {
@@ -24,6 +27,16 @@ const socket = new WebSocket(
 let frame = 0;
 //!  constants end
 
+
+let client_player;
+
+class Tree {
+    constructor(x, y) {
+        this.x = x
+        this.y = y
+    }
+}
+
 class Player {
     x = null;
     y = null;
@@ -33,6 +46,7 @@ class Player {
     emerge = null;
     death = null;
     dir = -1;
+    name = "";
 }
 
 class Animation {
@@ -50,7 +64,7 @@ class Animation {
 
 const players = {};
 const shells = {};
-const objects = {};
+const objects = [new Tree(127, 127)];
 const items = {};
 
 const movement = {
@@ -68,7 +82,8 @@ const textures = {
     stand: { "-1": [], 1: [] },
     run: { "-1": [], 1: [] },
     sword: { "-1": [], 1: [] },
-    shuriken: null
+    shuriken: null,
+    tree: null
 };
 
 const joystick = {
@@ -127,6 +142,9 @@ function loadTextures() {
     img = new Image();
     img.src = "/static/img/weapoons/shuriken.png"
     textures.shuriken = img;
+    img = new Image()
+    img.src = "/static/img/baground/Tree.png"
+    textures.tree = img
 
     // for (let i = 1; i < 7; i++) {}
     // console.log(player);
@@ -152,6 +170,16 @@ function render() {
             16,
             16
         )
+    }
+
+    for (const tree of objects) {
+        ctx.drawImage(
+            textures.tree,
+            tree.x - 32,
+            tree.y - 32,
+            64,
+            64
+        );
     }
 
     let player;
@@ -199,6 +227,7 @@ function render() {
                 32
             );
         }
+        ctx.fillText(player.name, player.x, player.y - 24)
         //! отображение самочуствия нашего ребенка
         let current_hp = (player.hp / 100) * 16;
         let hp_line_x = player.x - 8;
@@ -282,6 +311,7 @@ function addEventListeners() {
             case "Space":
                 // socket.send("use");
                 // TODO: dx, dy
+                console.log(movement.x, client_player.x, movement.y, client_player.y)
                 socket.send("aux:-1,0")
                 break;
         }
@@ -292,7 +322,6 @@ function addEventListeners() {
         document.addEventListener(i, event => {
             movement.x = event.clientX
             movement.y = event.clientY
-            console.log(movement.x, movement.y)
         })
     )
 
@@ -316,7 +345,12 @@ function addEventListeners() {
             let player = players[msg[1]];
             if (!player) player = players[msg[1]] = new Player();
             let cmd = msg[2];
-            if (cmd == "pos") {
+            if (cmd == "name") {
+                player.name = msg[3]
+                if ("guest" + random == msg[3])
+                    client_player = player
+            }
+            else if (cmd == "pos") {
                 [x, y] = msg[3].split(",");
                 player.x = x;
                 player.y = y;
@@ -330,7 +364,7 @@ function addEventListeners() {
             } else if (cmd == "hp") {
                 player.hp = parseInt(msg[3]);
                 if (!+player.hp) delete players[msg[1]];
-            } else if (cmd == "emerge") {
+            } else if (cmd == "new") {
                 [x, y] = msg[3].split(",");
                 player.x = x;
                 player.y = y;
@@ -378,7 +412,10 @@ if (isMobile()) {
     const button = document.createElement("button")
     button.innerText = "full"
     button.onclick = () => {
-        document.body.requestFullscreen()
+        if (document.fullscreen)
+            document.exitFullscreen()
+        else
+            document.body.requestFullscreen()
     }
     document.body.appendChild(button)
     function vectorHandler(dx, dy) {
