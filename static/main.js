@@ -8,7 +8,9 @@ document.body.append(canvas);
 
 const ctx = canvas.getContext("2d");
 ctx.imageSmoothingEnabled = false;
-ctx.scale(4, 4);
+const fixedWidth = 640
+ctx.save()
+ctx.scale(width / fixedWidth, width / fixedWidth);
 
 let random = localStorage.getItem("random");
 if (!random) {
@@ -56,6 +58,8 @@ const movement = {
     backward: false,
     left: false,
     right: false,
+    x: null,
+    y: null
 };
 
 const textures = {
@@ -277,11 +281,28 @@ function addEventListeners() {
                 break;
             case "Space":
                 // socket.send("use");
+                // TODO: dx, dy
                 socket.send("aux:-1,0")
                 break;
         }
         // send_vector();
     });
+
+    ["mouseenter", "mousemove"].forEach(i =>
+        document.addEventListener(i, event => {
+            movement.x = event.clientX
+            movement.y = event.clientY
+            console.log(movement.x, movement.y)
+        })
+    )
+
+    window.addEventListener("resize", event => {
+        const w = canvas.width = document.body.clientWidth
+        canvas.height = document.body.clientHeight
+        ctx.restore()
+        ctx.save()
+        ctx.scale(w / fixedWidth, w / fixedWidth)
+    })
 
     document.addEventListener("mousedown", (event) => {
         if (!event.button)
@@ -316,11 +337,15 @@ function addEventListeners() {
                 player.emerge = new Animation(16);
             }
         } else if (msg[0] == "s") {
-            let shell = shells[msg[1]]
-            const [x, y] = msg[3].split(",");
-            if (!shell) shell = shells[msg[1]] = {}
-            shell.x = x
-            shell.y = y
+            if (msg[2] == "del")
+                delete shells[msg[1]]
+            else {
+                let shell = shells[msg[1]]
+                const [x, y] = msg[3].split(",");
+                if (!shell) shell = shells[msg[1]] = {}
+                shell.x = x
+                shell.y = y
+            }
         }
         console.log(event.data);
         // render();

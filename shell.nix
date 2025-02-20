@@ -3,10 +3,10 @@ let
 in pkgs.mkShell {
   packages = [
     (pkgs.python3.withPackages (python-pkgs: with python-pkgs; [
-      uvloop
-      starlette
       websockets
       uvicorn
+      starlette
+      aiohttp
     ]))
   ];
 }
