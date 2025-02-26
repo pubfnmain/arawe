@@ -311,8 +311,8 @@ function addEventListeners() {
             case "Space":
                 // socket.send("use");
                 // TODO: dx, dy
-                console.log(movement.x, client_player.x, movement.y, client_player.y)
-                socket.send("aux:-1,0")
+                socket.send(`aux:${movement.x / 3 / client_player.x},${movement.y / 3 / client_player.y}`)
+                // socket.send("aux:-1,0")
                 break;
         }
         // send_vector();
@@ -326,11 +326,11 @@ function addEventListeners() {
     )
 
     window.addEventListener("resize", event => {
-        const w = canvas.width = document.body.clientWidth
-        canvas.height = document.body.clientHeight
-        ctx.restore()
-        ctx.save()
-        ctx.scale(w / fixedWidth, w / fixedWidth)
+        // const w = canvas.width = document.body.clientWidth
+        // canvas.height = document.body.clientHeight
+        // ctx.restore()
+        // ctx.save()
+        // ctx.scale(w / fixedWidth, w / fixedWidth)
     })
 
     document.addEventListener("mousedown", (event) => {
