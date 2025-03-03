@@ -15,8 +15,13 @@ function handleKeyDown(event) {
             state.right = true
             break;
         case "Space":
-            // TODO: accurate vector
-            // state.socket.send(`aux:${state.cx / 3 / client_player.x},${movement.y / 3 / client_player.y}`)
+            let x = state.cx - state.player.x * 3
+            let y = state.cy - state.player.y * 3
+            let m = Math.max(Math.abs(x), Math.abs(y))
+            x = (x / m).toFixed(2)
+            y = (y / m).toFixed(2)
+            state.socket.send(`aux:${x},${y}`)
+        default:
             return
     }
     state.socket.send(state.getVector());
@@ -36,6 +41,8 @@ function handleKeyUp(event) {
         case "KeyD":
             state.right = false
             break;
+        default:
+            return
     }
     state.socket.send(state.getVector());
 }

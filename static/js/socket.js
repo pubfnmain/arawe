@@ -2,9 +2,10 @@ import { players, shells, state } from "./state.js"
 import { Player } from "./object.js"
 
 export default function listenSocket(event) {
-    let x, y, msg = event.data.split(":")
+    let msg = event.data.split(":")
     switch (msg[0]) {
         case "p":
+            let x, y
             let player = players[msg[1]];
             if (!player)
                 player = players[msg[1]] = new Player();
@@ -50,7 +51,7 @@ export default function listenSocket(event) {
                     break
                 case "pos":
                     let shell = shells[msg[1]]
-                    [x, y] = msg[3].split(",");
+                    let [x, y] = msg[3].split(",");
                     if (!shell)
                         shell = shells[msg[1]] = {}
                     shell.x = x

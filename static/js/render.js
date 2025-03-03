@@ -1,4 +1,5 @@
-import { ctx, canvas, players, shells, objects, mobile } from "./state.js"
+import { textures, ctx, canvas, players, shells, objects, mobile } from "./state.js"
+import { Shell } from "./object.js"
 
 const joystick = {
     x: 30,
@@ -15,7 +16,7 @@ function render() {
     ctx.fillStyle = "#0fef7f";
     for (const shell of Object.values(shells)) {
         ctx.drawImage(
-            textures.shuriken,
+            textures.shuriken[Shell.frame],
             shell.x - 8,
             shell.y - 8,
             16,

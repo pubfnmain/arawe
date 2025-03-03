@@ -69,7 +69,7 @@ export class Shell {
 }
 
 
-Shell.frame = 3
+Shell.frame = 2
 
 
 export function addFrameUpdateLoop() {
@@ -93,7 +93,7 @@ export function addFrameUpdateLoop() {
             }
         }
         if (!Shell.frame)
-            Shell.frame = 3
+            Shell.frame = 2
         else
             Shell.frame--
     }, 100);

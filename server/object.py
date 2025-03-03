@@ -36,7 +36,7 @@ class Object:
         return False
 
     def get_pos(self):
-        return f"{self.repr}:pos:{self.x},{self.y}"
+        return f"{self.repr}:pos:{self.x:.2f},{self.y:.2f}"
 
 
 class Player(Object):
@@ -58,10 +58,10 @@ class Player(Object):
         return f"{self.repr}:sh:{self.sh}"
 
     def get_vec(self):
-        return f"{self.repr}:vec:{self.dx},{self.dy}"
+        return f"{self.repr}:vec:{self.dx:.2f},{self.dy:.2f}"
 
     def new(self):
-        return f"{self.repr}:new:{self.x},{self.y}"
+        return f"{self.repr}:new:{self.x:.2f},{self.y:.2f}"
 
 
 class Shell(Object):
