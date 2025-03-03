@@ -34,10 +34,9 @@ export const state = {
     }
 }
 
-export const canvas = document.createElement("canvas")
+export const canvas = document.querySelector("canvas")
 canvas.width = document.body.clientWidth;
 canvas.height = document.body.clientHeight;
-document.body.append(canvas);
 
 export const ctx = canvas.getContext("2d");
 

@@ -59,12 +59,12 @@ function render() {
     // джойстик Тимура End
 }
 
-function clear() {
+export function clear() {
     ctx.fillStyle = "#1f1f1f";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
-export default function addRenderLoop() {
+export function addRenderLoop() {
     setInterval(() => {
         clear()
         render()
