@@ -7,7 +7,7 @@ import { addFrameUpdateLoop } from "./object.js"
 
 function init(name) {
   state.player.name = name
-  state.socket = new WebSocket("ws://localhost:8080/" + state.player.name)
+  state.socket = new WebSocket(window.location.href + state.player.name)
   state.socket.addEventListener("message", listenSocket)
   addControl()
   loadTextures()
@@ -18,9 +18,11 @@ function init(name) {
 clear()
 const button = document.querySelector("button")
 const input = document.querySelector("input")
+const title = document.getElementById("title")
 
 button.onclick = () => {
   init(input.value)
   button.remove()
   input.remove()
+  title.remove()
 }

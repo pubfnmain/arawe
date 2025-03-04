@@ -8,7 +8,7 @@ class Object:
     dx: float = 0
     dy: float = 0
     repr: str
-    speed = 2
+    speed = 3
 
     def __init__(self, x, y):
         self.__class__.id += 1

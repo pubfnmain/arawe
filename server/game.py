@@ -23,6 +23,8 @@ class Game:
                 return None
             player.state = True
             self.sockets.append(ws)
+            for socket in self.sockets:
+                await socket.send_str(player.repr + ":name:" + name)
         else:
             self.players[name] = player = Player(64, 64)
             self.sockets.append(ws)
