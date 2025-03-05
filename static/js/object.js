@@ -33,6 +33,8 @@ export class Player {
         else
             frame = textures.stand[this.dir][Player.frame]
 
+        // console.log()
+
         ctx.drawImage(frame, x, y, 32, 32)
 
         if (this.use)
@@ -95,12 +97,12 @@ export function addFrameUpdateLoop() {
                 else
                     player.use--
             }
-            if (player.death != null) {
-                if (player.death)
-                    player.death--
-                else
-                    delete players[id]
-            }
+            // if (player.death != null) {
+            //     if (player.death)
+            //         player.death--
+            //     else
+            //         delete players[id]
+            // }
         }
         if (!Shell.frame)
             Shell.frame = 2

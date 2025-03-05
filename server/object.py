@@ -12,7 +12,7 @@ class Object:
         self.__class__.id += 1
         self.x = x
         self.y = y
-        self.repr = self.char + str(self.id)
+        self.repr = self.char + ':' + str(self.id)
 
 
 class Vector(Object):
