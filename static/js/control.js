@@ -1,4 +1,4 @@
-import { state } from "./state.js"
+import { state } from "./state.js";
 
 function handleKeyDown(event) {
     switch (event.code) {
@@ -6,23 +6,23 @@ function handleKeyDown(event) {
             state.forward = true;
             break;
         case "KeyA":
-            state.left = true
+            state.left = true;
             break;
         case "KeyS":
-            state.backward = true
+            state.backward = true;
             break;
         case "KeyD":
-            state.right = true
+            state.right = true;
             break;
         case "Space":
-            let x = state.cx - state.player.x * 3
-            let y = state.cy - state.player.y * 3
-            let m = Math.max(Math.abs(x), Math.abs(y))
-            x = (x / m).toFixed(2)
-            y = (y / m).toFixed(2)
-            state.socket.send(`aux:${x},${y}`)
+            let x = state.cx - state.player.x * 3;
+            let y = state.cy - state.player.y * 3;
+            let m = Math.max(Math.abs(x), Math.abs(y));
+            x = (x / m).toFixed(2);
+            y = (y / m).toFixed(2);
+            state.socket.send(`aux:${x},${y}`);
         default:
-            return
+            return;
     }
     state.socket.send(state.getVector());
 }
@@ -30,41 +30,39 @@ function handleKeyDown(event) {
 function handleKeyUp(event) {
     switch (event.code) {
         case "KeyW":
-            state.forward = false
+            state.forward = false;
             break;
         case "KeyA":
-            state.left = false
+            state.left = false;
             break;
         case "KeyS":
-            state.backward = false
+            state.backward = false;
             break;
         case "KeyD":
-            state.right = false
+            state.right = false;
             break;
         default:
-            return
+            return;
     }
     state.socket.send(state.getVector());
 }
 
 function handleMouseMove(event) {
-    state.cx = event.clientX
-    state.cy = event.clientY
+    state.cx = event.clientX;
+    state.cy = event.clientY;
 }
 
 function handleMouseDown(event) {
-  if (!event.button)
-      state.socket.send("use");
+    if (!event.button) state.socket.send("use");
 }
 
 export default function addControl() {
-    document.addEventListener("keydown", handleKeyDown)
-    document.addEventListener("keyup", handleKeyUp)
-    document.addEventListener("mouseenter", handleMouseMove)
-    document.addEventListener("mousemove", handleMouseMove)
-    document.addEventListener("mousedown", handleMouseDown)
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("keyup", handleKeyUp);
+    document.addEventListener("mouseenter", handleMouseMove);
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mousedown", handleMouseDown);
 }
-
 
 // if (isMobile()) {
 //     const button = document.createElement("button")
@@ -152,4 +150,3 @@ export default function addControl() {
 //         vectorHandler(0, 0); // Остановка
 //     });
 // }
-
