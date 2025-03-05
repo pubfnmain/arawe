@@ -34,7 +34,8 @@ export default function listenSocket(event) {
                 case "hp":
                     player.hp = +msg[3];
                     if (!player.hp)
-                        delete players[msg[1]];
+                        player.death = 15
+                        // delete players[msg[1]];
                     break
                 case "new":
                     [x, y] = msg[3].split(",");
