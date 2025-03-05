@@ -20,6 +20,7 @@ const button = document.querySelector("button")
 const input = document.querySelector("input")
 const title = document.getElementById("title")
 
+
 button.onclick = () => {
   init(input.value)
   button.remove()

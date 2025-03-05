@@ -24,12 +24,16 @@ export class Player {
         const x = this.x - 16, y = this.y - 16
         let frame
 
-        if (this.emerge) {
+        if (this.emerge)
             frame = textures.emerge[this.dir][this.emerge]
-        } else if (this.run)
+        else if (this.death)
+            frame = textures.death[this.dir][this.death]
+        else if (this.run)
             frame = textures.run[this.dir][Player.frame]
         else
             frame = textures.stand[this.dir][Player.frame]
+
+        // console.log()
 
         ctx.drawImage(frame, x, y, 32, 32)
 
@@ -73,12 +77,14 @@ Shell.frame = 2
 
 
 export function addFrameUpdateLoop() {
+    let player
     setInterval(() => {
         if (!Player.frame)
             Player.frame = 5
         else
             Player.frame--;
-        for (const player of Object.values(players)) {
+        for (const id of Object.keys(players)) {
+            player = players[id]
             if (player.emerge != null) {
                 if (!player.emerge)
                     player.emerge = null
@@ -90,6 +96,12 @@ export function addFrameUpdateLoop() {
                     player.use = null
                 else
                     player.use--
+            }
+            if (player.death != null) {
+                if (player.death)
+                    player.death--
+                else
+                    delete players[id]
             }
         }
         if (!Shell.frame)

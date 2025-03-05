@@ -5,15 +5,20 @@ class Object:
     id: int
     x: float
     y: float
-    dx: float = 0
-    dy: float = 0
+    char = "o"
     repr: str
-    speed = 3
 
     def __init__(self, x, y):
         self.__class__.id += 1
         self.x = x
         self.y = y
+        self.repr = self.char + ':' + str(self.id)
+
+
+class Vector(Object):
+    dx: float = 0
+    dy: float = 0
+    speed = 3
 
     def move(self) -> bool:
         if self.dx or self.dy:
@@ -39,17 +44,14 @@ class Object:
         return f"{self.repr}:pos:{self.x:.2f},{self.y:.2f}"
 
 
-class Player(Object):
+class Player(Vector):
     id: int = 0
     hp: int = 100
     sh: int = 0
     use: int = 0
     aux: int = 0
+    char = "p"
     state: bool = True
-
-    def __init__(self, x, y):
-        super().__init__(x, y)
-        self.repr = "p:" + str(self.id)
 
     def get_hp(self):
         return f"{self.repr}:hp:{self.hp}"
@@ -64,19 +66,14 @@ class Player(Object):
         return f"{self.repr}:new:{self.x:.2f},{self.y:.2f}"
 
 
-class Shell(Object):
+class Shell(Vector):
     id: int = 0
-    x: float
-    y: float
-    dx: float
-    dy: float
     p: Player
+    char = "s"
 
     def __init__(self, p: Player, dx, dy):
         self.p = p
         super().__init__(p.x, p.y)
-        self.repr = "s:" + str(self.id)
-        self.y = p.y
         self.dx = dx
         self.dy = dy
 
