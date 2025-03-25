@@ -1,18 +1,17 @@
-import { textures, ctx, canvas, players, shells, objects, mobile } from "./state.js"
-import { Shell } from "./object.js"
-
-const joystick = {
-    x: 30,
-    y: canvas.height / 4 - 30,
-    radius: 20,
-    stickRadius: 10,
-    stickX: 30,
-    stickY: canvas.height / 4 - 30,
-    active: false,
-};
+import {
+    textures,
+    ctx,
+    canvas,
+    players,
+    shells,
+    objects,
+    mobile,
+    joystick,
+} from "./state.js";
+import { Shell } from "./object.js";
 
 function render() {
-    // isMobile() && ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // mobile && ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "#0fef7f";
     for (const shell of Object.values(shells)) {
         ctx.drawImage(
@@ -21,26 +20,20 @@ function render() {
             shell.y - 8,
             16,
             16
-        )
+        );
     }
 
     for (const tree of objects) {
-        ctx.drawImage(
-            textures.tree,
-            tree.x - 32,
-            tree.y - 32,
-            64,
-            64
-        );
+        ctx.drawImage(textures.tree, tree.x - 32, tree.y - 32, 64, 64);
     }
 
     let player;
     for (const id of Object.keys(players)) {
         player = players[id];
-        player.render()
+        player.render();
     }
+    // джойстик Тимура start
     if (mobile) {
-        // джойстик Тимура start
         ctx.beginPath();
         ctx.arc(joystick.x, joystick.y, joystick.radius, 0, Math.PI * 2);
         ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
@@ -66,7 +59,7 @@ export function clear() {
 
 export function addRenderLoop() {
     setInterval(() => {
-        clear()
-        render()
+        clear();
+        render();
     }, 32);
 }

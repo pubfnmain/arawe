@@ -15,8 +15,6 @@ async def listen():
                 for socket in sockets:
                     await socket.send_text(msg["data"])
 
-
-
 async def create_player(websocket: WebSocket) -> None:
     name = websocket.path_params["name"]
     player = await r.hget("players", name)
