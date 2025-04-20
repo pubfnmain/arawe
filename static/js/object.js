@@ -1,11 +1,7 @@
 import { ctx, textures, players } from "./state.js"
 
 export class Player {
-    constructor(x, y) {
-        this.x = x
-        this.y = y 
-    }
-
+    type = 'p'
     run = 0;
     hp = 100;
     use = null;
@@ -24,25 +20,30 @@ export class Player {
         const x = this.x - 16, y = this.y - 16
         let frame
 
-        if (this.emerge)
-            frame = textures.emerge[this.dir][this.emerge]
-        else if (this.death)
-            frame = textures.death[this.dir][this.death]
-        else if (this.run)
-            frame = textures.run[this.dir][Player.frame]
-        else
-            frame = textures.stand[this.dir][Player.frame]
+        if (this.type == 'p') {
+            if (this.emerge)
+                frame = textures.emerge[this.dir][this.emerge]
+            else if (this.death)
+                frame = textures.death[this.dir][this.death]
+            else if (this.run)
+                frame = textures.run[this.dir][Player.frame]
+            else
+                frame = textures.stand[this.dir][Player.frame]
 
-        // console.log()
+            // console.log()
 
-        ctx.drawImage(frame, x, y, 32, 32)
+            ctx.drawImage(frame, x, y, 32, 32)
 
-        if (this.use)
-            frame = textures.sword[this.dir][this.use]
-        else
-            frame = textures.sword[this.dir][5]
+            if (this.use)
+                frame = textures.sword[this.dir][this.use]
+            else
+                frame = textures.sword[this.dir][5]
 
-        ctx.drawImage(frame, x, y, 32, 32)
+            ctx.drawImage(frame, x, y, 32, 32)
+        } else {
+            frame = textures.monster[this.dir][Player.frame]
+            ctx.drawImage(frame, x, y, 32, 32)
+        }
     }
 
     renderName() {

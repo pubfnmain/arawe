@@ -5,9 +5,13 @@ export default function listenSocket(event) {
     let msg = event.data.split(":");
     switch (msg[0]) {
         case "p":
+        case "m":
             let x, y;
             let player = players[msg[1]];
-            if (!player) player = players[msg[1]] = new Player();
+            if (!player) {
+                player = players[msg[1]] = new Player();
+                player.type = msg[0]
+            }
             switch (msg[2]) {
                 case "name":
                     player.name = msg[3];

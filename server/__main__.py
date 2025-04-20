@@ -1,9 +1,10 @@
 from asyncio import create_task
+import logging as log
 
 from aiohttp.web import Application, run_app, static, get
 
 from . import game
-from .handlers import index, socket
+from .views import index, socket
 
 
 async def game_loop(app):

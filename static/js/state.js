@@ -5,12 +5,14 @@ export const textures = {
     run: [[], []],
     sword: [[], []],
     shuriken: [],
+    monster: [[], []]
 };
 
 export const mobile = /Android|iPhone/i.test(navigator.userAgent);
-export const players = [];
-export const shells = [];
+export const players = {};
+export const shells = {};
 export const objects = [];
+export const monsters = {};
 
 export const state = {
     forward: false,
@@ -75,6 +77,8 @@ export function loadTextures() {
     loadImageSet("Dacer/rebirth/left", 16, textures.emerge[0]);
     loadImageSet("Dacer/rebirth/right", 16, textures.emerge[1]);
     loadImageSet("weapoons/shuriken", 3, textures.shuriken);
+    loadImageSet("monstrs/eye/move/left", 6, textures.monster[0]);
+    loadImageSet("monstrs/eye/move/right", 6, textures.monster[1]);
     textures.tree = loadImage("baground/Tree");
     textures.rock = loadImage("baground/Rock");
 }

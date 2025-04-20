@@ -1,12 +1,16 @@
 from asyncio import gather, sleep, create_task
+
 from aiohttp.web import WebSocketResponse
 
 from . import WIDTH, HEIGHT
-from .object import Player, Shell
+from .object import Player, Shell, Monster
 
 
 class Game:
-    players: dict[str, Player] = {}
+    players: dict[str, Player] = {
+        "Timur": Monster(96, 96),
+        "Ali": Monster(320, 96)
+    }
     shells: list[Shell] = []
     sockets: list[WebSocketResponse] = []
 
@@ -26,7 +30,7 @@ class Game:
             for socket in self.sockets:
                 await socket.send_str(player.repr + ":name:" + name)
         else:
-            self.players[name] = player = Player(64, 64)
+            self.players[name] = player = Player(256, 256)
             self.sockets.append(ws)
             for socket in self.sockets:
                 await socket.send_str(player.new())
@@ -78,6 +82,8 @@ class Game:
     async def loop(self):
         while True:
             for player in self.players.values():
+                if isinstance(player, Monster):
+                    await player.process(self)
                 if player.use:
                     player.use -= 1
                 if player.aux:
@@ -111,4 +117,5 @@ class Game:
                         self.shells.pop(i)
                         await self.send(p.get_hp())
                         await self.send(shell.delete())
+
             await sleep(0.03)

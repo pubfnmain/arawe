@@ -19,9 +19,10 @@ const button = document.querySelector("button");
 const input = document.querySelector("input");
 const title = document.getElementById("title");
 
-// button.onclick = () => {
-init("timur");
+button.onclick = () => {
+console.log(input)
+init(input.value);
 button.remove();
 input.remove();
 title.remove();
-// };
+};

@@ -7,6 +7,7 @@ import {
     objects,
     mobile,
     joystick,
+    monsters
 } from "./state.js";
 import { Shell } from "./object.js";
 

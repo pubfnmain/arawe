@@ -1,6 +1,8 @@
 import { mobile, state, joystick, canvas } from "./state.js";
 
 function handleKeyDown(event) {
+    if (event.repeat)
+        return
     switch (event.code) {
         case "KeyW":
             state.forward = true;
@@ -21,12 +23,15 @@ function handleKeyDown(event) {
             x = (x / m).toFixed(2);
             y = (y / m).toFixed(2);
             state.socket.send(`aux:${x},${y}`);
+            return
         default:
             return;
     }
     state.socket.send(state.getVector());
 }
 function handleKeyUp(event) {
+    if (event.repeat)
+        return
     switch (event.code) {
         case "KeyW":
             state.forward = false;
@@ -43,6 +48,7 @@ function handleKeyUp(event) {
         default:
             return;
     }
+    console.log(1)
     state.socket.send(state.getVector());
 }
 
