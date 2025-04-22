@@ -36,11 +36,16 @@ export const state = {
 export const canvas = document.querySelector("canvas");
 canvas.width = document.body.clientWidth;
 canvas.height = document.body.clientHeight;
+
+export const scale = 3
+
+export const CX = canvas.width / 2
+export const CY = canvas.height / 2
 export const ctx = canvas.getContext("2d");
 ctx.imageSmoothingEnabled = false;
 ctx.font = "8px Monocraft";
 ctx.textAlign = "center";
-ctx.scale(3, 3);
+ctx.scale(scale, scale);
 
 export const joystick = {
     x: 30,

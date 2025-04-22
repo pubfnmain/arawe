@@ -20,7 +20,6 @@ const input = document.querySelector("input");
 const title = document.getElementById("title");
 
 button.onclick = () => {
-console.log(input)
 init(input.value);
 button.remove();
 input.remove();

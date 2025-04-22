@@ -1,4 +1,4 @@
-import { ctx, textures, players } from "./state.js"
+import { ctx, textures, players, state, CX, CY, scale } from "./state.js"
 
 export class Player {
     type = 'p'
@@ -11,20 +11,21 @@ export class Player {
     name = "";
 
     render() {
-        this.renderModel()
-        this.renderName()
-        this.renderHP()
+        const x = (this.x - state.player.x + CX) / scale
+        const y = (this.y - state.player.y + CY) / scale
+        this.renderModel(x - 16, y - 16)
+        this.renderName(x, y)
+        this.renderHP(x, y)
     }
 
-    renderModel() {
-        const x = this.x - 16, y = this.y - 16
+    renderModel(x, y) {
         let frame
 
         if (this.type == 'p') {
-            if (this.emerge)
-                frame = textures.emerge[this.dir][this.emerge]
-            else if (this.death)
+            if (this.death != null)
                 frame = textures.death[this.dir][this.death]
+            else if (this.emerge)
+                frame = textures.emerge[this.dir][this.emerge]
             else if (this.run)
                 frame = textures.run[this.dir][Player.frame]
             else
@@ -46,15 +47,15 @@ export class Player {
         }
     }
 
-    renderName() {
+    renderName(x, y) {
         ctx.fillStyle = "white";
-        ctx.fillText(this.name, this.x, this.y - 24)
+        ctx.fillText(this.name, x, y - 24)
     }
 
-    renderHP() {
+    renderHP(x, y) {
         const current_hp = (this.hp / 100) * 16;
-        const hp_line_x = this.x - 8;
-        const hp_line_y = this.y - 18;
+        const hp_line_x = x - 8;
+        const hp_line_y = y - 18;
         ctx.fillStyle = "white";
         ctx.fillRect(hp_line_x, hp_line_y, current_hp, 1.8);
         ctx.strokeStyle = "white";
@@ -67,9 +68,37 @@ Player.frame = 5
 
 
 export class Shell {
-    constructor(x, y) {
+    render() {
+        const x = (this.x - state.player.x + CX) / scale
+        const y = (this.y - state.player.y + CY) / scale
+
+        ctx.drawImage(
+            textures.shuriken[Shell.frame],
+            x - 8,
+            y - 8,
+            16,
+            16
+        );
+    }
+}
+
+export class Texture {
+    constructor(code, x, y) {
+        this.code = code
         this.x = x
         this.y = y
+    }
+    render() {
+        const x = (this.x - state.player.x + CX) / scale
+        const y = (this.y - state.player.y + CY) / scale
+
+        ctx.drawImage(
+            this.code && textures.rock || textures.tree,
+            x - 32,
+            y - 32,
+            64,
+            64
+        );
     }
 }
 

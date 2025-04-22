@@ -1,12 +1,15 @@
-import { players, shells, state } from "./state.js";
-import { Player } from "./object.js";
+import { players, shells, state, objects } from "./state.js";
+import { Shell, Player, Texture } from "./object.js";
 
 export default function listenSocket(event) {
     let msg = event.data.split(":");
+    let x, y
     switch (msg[0]) {
+        case "t":
+            [x, y] = msg[3].split(",");
+            objects.push(new Texture(+msg[2], +x, +y))
         case "p":
         case "m":
-            let x, y;
             let player = players[msg[1]];
             if (!player) {
                 player = players[msg[1]] = new Player();
@@ -52,9 +55,9 @@ export default function listenSocket(event) {
                 case "pos":
                     let shell = shells[msg[1]];
                     let [x, y] = msg[3].split(",");
-                    if (!shell) shell = shells[msg[1]] = {};
-                    shell.x = x;
-                    shell.y = y;
+                    if (!shell) shell = shells[msg[1]] = new Shell();
+                    shell.x = x
+                    shell.y = y
                     break;
             }
             break;

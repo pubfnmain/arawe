@@ -1,4 +1,4 @@
-import { mobile, state, joystick, canvas } from "./state.js";
+import { mobile, state, joystick, canvas, CX, CY } from "./state.js";
 
 function handleKeyDown(event) {
     if (event.repeat)
@@ -17,8 +17,8 @@ function handleKeyDown(event) {
             state.right = true;
             break;
         case "Space":
-            let x = state.cx - state.player.x * 3;
-            let y = state.cy - state.player.y * 3;
+            let x = state.cx - CX;
+            let y = state.cy - CY;
             let m = Math.max(Math.abs(x), Math.abs(y));
             x = (x / m).toFixed(2);
             y = (y / m).toFixed(2);
@@ -48,7 +48,6 @@ function handleKeyUp(event) {
         default:
             return;
     }
-    console.log(1)
     state.socket.send(state.getVector());
 }
 

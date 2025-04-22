@@ -1,5 +1,5 @@
-WIDTH = 640
-HEIGHT = 640
+WIDTH = 3200
+HEIGHT = 3200
 
 
 from .game import Game

@@ -23,11 +23,18 @@ class Object:
 class Texture(Object):
     char = 't'
 
+    def __init__(self, x: int, y: int, code: int):
+        super().__init__(x, y)
+        self.code = code
+
+    def get_data(self):
+        return f"{self.repr}:{self.code}:{self.x:.2f},{self.y:.2f}"
+
 
 class Vector(Object):
     dx: float
     dy: float
-    speed = 3
+    speed = 5
 
     def __init__(self, x: float, y: float,
                  dx: float = 0, dy: float = 0) -> None:
@@ -69,6 +76,9 @@ class Player(Vector):
     char = 'p'
     state: bool = True
 
+    def name(self, name):
+        return f"{self.repr}:name:{name}"
+
     def get_hp(self):
         return f"{self.repr}:hp:{self.hp}"
 
@@ -84,9 +94,9 @@ class Player(Vector):
 
 class Monster(Player):
     char = 'm'
-    agr = 256
-    hit = 128
-    speed = 2
+    agr = 512
+    hit = 256
+    speed = 4
 
     async def process(self, game):
         agr = False
@@ -109,15 +119,16 @@ class Monster(Player):
             dx = target.x - self.x
             dy = target.y - self.y
             divider = max(abs(dx), abs(dy))
-            dx /= divider
-            dy /= divider
+            if divider:
+                dx /= divider
+                dy /= divider
 
-            if hit:
-                # print(self.x, target.x, self.y, target.y, divider, dx, dy)
-                await game.aux(self, dx, dy)
+                if hit:
+                    # print(self.x, target.x, self.y, target.y, divider, dx, dy)
+                    await game.aux(self, dx, dy)
 
-            if agr:
-                await game.vec(self, dx, dy)
+                if agr:
+                    await game.vec(self, dx, dy)
         else:
             self.dx = 0
             self.dy = 0
