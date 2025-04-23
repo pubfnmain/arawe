@@ -20,8 +20,10 @@ const input = document.querySelector("input");
 const title = document.getElementById("title");
 
 button.onclick = () => {
-init(input.value);
-button.remove();
-input.remove();
-title.remove();
+    if (input.value) {
+        init(input.value);
+        button.remove();
+        input.remove();
+        title.remove();
+    }
 };

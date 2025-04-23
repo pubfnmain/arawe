@@ -137,6 +137,7 @@ class Monster(Player):
 class Shell(Vector):
     p: Player
     char = 's'
+    speed = 8
 
     def __init__(self, p: Player, dx, dy):
         self.p = p

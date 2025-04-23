@@ -74,8 +74,8 @@ class Game:
             if p is player:
                 continue
             if abs(player.x - p.x) <= 32 and abs(player.y - p.y) <= 32:
-                p.hp -= 10
-                if not p.hp:
+                p.hp -= 20
+                if p.hp <= 0:
                     del self.players[name]
                 await self.send(p.get_hp())
 
@@ -83,7 +83,7 @@ class Game:
         if player.aux:
             return
 
-        player.aux = 16
+        player.aux = 32
         self.shells.append(Shell(player, dx, dy))
 
     async def vec(self, player, dx, dy):
@@ -127,7 +127,7 @@ class Game:
                             continue
                         if abs(shell.x - p.x) <= 16 and abs(shell.y - p.y) <= 16:
                             p.hp -= 10
-                            if not p.hp:
+                            if p.hp <= 0:
                                 del self.players[name]
                             self.shells.pop(i)
                             await self.send(p.get_hp())

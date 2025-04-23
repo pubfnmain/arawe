@@ -11,7 +11,7 @@ async def index(request):
 
 
 async def socket(request):
-    name = request.match_info["name"]
+    name = request.match_info["name"][:16]
     ws = WebSocketResponse()
     await ws.prepare(request)
     try:

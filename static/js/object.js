@@ -92,13 +92,23 @@ export class Texture {
         const x = (this.x - state.player.x + CX) / scale
         const y = (this.y - state.player.y + CY) / scale
 
-        ctx.drawImage(
-            this.code && textures.rock || textures.tree,
-            x - 32,
-            y - 32,
-            64,
-            64
-        );
+        if (this.code) {
+            ctx.drawImage(
+                textures.tree,
+                x - 32,
+                y - 32,
+                64,
+                64
+            );
+        } else {
+            ctx.drawImage(
+                textures.rock,
+                x - 8,
+                y - 8,
+                16,
+                16
+            );
+        }
     }
 }
 
