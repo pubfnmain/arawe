@@ -1,8 +1,8 @@
 # Arawe
 
-Future domain: arawe.dayrain.uk
+![rec](rec.mp4)
 
-## Protocol 
+## Message types
 
 ### Server to Client
 
@@ -19,36 +19,10 @@ Future domain: arawe.dayrain.uk
 - `use:dx(float)[-1;1],dy(float)[-1;1]` - use item
 - `vec:dx(float)[-1;1],dy(float)[-1;1]` - change vector
 
-## TODO
-
-- [ ] Protocol
-- [ ] Pixel art animations
-  - [x] Player model
-  - [x] Sword model
-  - [ ] Next gen animations
-- [ ] Game engine
-  - [ ] Multiple players
-  - [ ] Player actions
-- [ ] Server
-  - [ ] Multiple sessions
-  - [ ] Authentication
-  - [ ] Database
-  - [ ] Protocol implementation
-- [ ] Client
-  - [ ] Render
-  - [ ] Control of actions
-  - [ ] Protocol implementation
-  - [ ] Settings
-  - [ ] Assets
-  - [ ] Menu
-  - [ ] Auth form
-- [ ] Deploy
-
 ## Setup
 
 ```python -m venv .venv
 pip install -r requirements.txt
-redis-server
-python server/__init__.py
 python -m server
 ```
+
