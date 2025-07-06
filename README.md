@@ -1,6 +1,8 @@
 # Arawe
 
-![rec](rec.mp4)
+![preview](preview.png)
+
+Recording: [rec](rec.mp4)
 
 ## Message types
 
